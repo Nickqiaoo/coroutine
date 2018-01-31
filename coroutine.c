@@ -141,7 +141,7 @@ coroutine_resume(struct schedule * S, int id) {
 	case COROUTINE_READY: //如果状态是ready也就是第一次创建
 		getcontext(&C->ctx); //获取当前上下文
 		C->ctx.uc_stack.ss_sp = S->stack; //将协程栈设置为调度器的共享栈
-		C->ctx.uc_stack.ss_size = STACK_SIZE; //设置栈容量  使用时将S->stack+STACK_SIZE作为栈底，向下扩张
+		C->ctx.uc_stack.ss_size = STACK_SIZE; //设置栈容量  使用时栈顶栈底同时指向S->stack+STACK_SIZE，栈顶向下扩张
 		C->ctx.uc_link = &S->main; //将返回上下文设置为调度器的上下文，协程执行完后会返回到main上下文
 		S->running = id; //设置调度器当前运行的协程id
 		C->status = COROUTINE_RUNNING; //设置协程状态
@@ -160,6 +160,7 @@ coroutine_resume(struct schedule * S, int id) {
 	}
 }
 
+//保存共享栈到私有栈
 static void
 _save_stack(struct coroutine *C, char *top) { //top为栈底
 	char dummy = 0; //这里定义一个char变量，dummy地址为栈顶
